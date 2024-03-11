@@ -67,8 +67,11 @@ def test_layout_uncond(model, batch_size=128, dataset_name='publaynet', test_plo
     with torch.no_grad():
         for i in tqdm(range(n_batch), desc='uncond testing', ncols=200, total=n_batch):
             bbox_generated, label, mask = model.reverse_ddim(batch_size=batch_size, stochastic=True, save_inter=False)
-            if beautify:
-                bbox_generated, mask = post_process(bbox_generated, mask)
+            if beautify and dataset_name=='publaynet':
+                bbox_generated, mask = post_process(bbox_generated, mask, w_o=1)
+            elif beautify and (dataset_name=='rico25' or dataset_name=='rico13'):
+                bbox_generated, mask = post_process(bbox_generated, mask, w_o=0)
+
             padding_mask = ~mask
 
             label[mask == False] = 0
@@ -149,8 +152,12 @@ def test_layout_cond(model, batch_size=256, cond='c', dataset_name='publaynet', 
                 real_layout = torch.cat((label_oh, bbox_in), dim=2).to(device)
 
                 bbox_generated, label_generated, mask_generated = model.conditional_reverse_ddim(real_layout, cond=cond)
-                if beautify:
-                    bbox_generated, mask_generated = post_process(bbox_generated, mask_generated)
+
+                if beautify and dataset_name == 'publaynet':
+                    bbox_generated, mask_generated = post_process(bbox_generated, mask_generated, w_o=1)
+                elif beautify and (dataset_name == 'rico25' or dataset_name == 'rico13'):
+                    bbox_generated, mask_generated = post_process(bbox_generated, mask_generated, w_o=0)
+
                 padding_mask = ~mask_generated
 
                 # test for errors
@@ -252,8 +259,11 @@ def test_layout_refine(model, batch_size=256, dataset_name='publaynet', seq_dim=
                 noisy_layout = torch.cat((label_oh, bbox_in_noisy), dim=2).to(device)
 
                 bbox_refined, _, _ = model.refinement_reverse_ddim(noisy_layout)
-                if beautify:
-                    bbox_refined, mask = post_process(bbox_refined, mask)
+
+                if beautify and dataset_name == 'publaynet':
+                    bbox_refined, mask = post_process(bbox_refined, mask, w_o=1)
+                elif beautify and (dataset_name == 'rico25' or dataset_name == 'rico13'):
+                    bbox_refined, mask = post_process(bbox_refined, mask, w_o=0)
                 padding_mask = ~mask
 
                 # accumulate align and overlap
