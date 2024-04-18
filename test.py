@@ -168,7 +168,7 @@ def test_layout_cond(model, batch_size=256, cond='c', dataset_name='publaynet', 
                 # accumulate align and overlap
                 align_norm = compute_alignment(bbox_generated, mask)
                 align_sum += torch.mean(align_norm)
-                overlap_score = compute_overlap(bbox, mask)
+                overlap_score = compute_overlap(bbox_generated, mask)
                 overlap_sum += torch.mean(overlap_score)
 
                 # record for max_iou
