@@ -6,6 +6,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+from tqdm.auto import tqdm
 
 from lace.constraints.alignment import layout_alignment_matrix
 from lace.constraints.piou import piou_xywh
@@ -20,6 +21,7 @@ class PostProcessOutput(object):
     loss: Optional[torch.Tensor] = None
 
 
+@torch.enable_grad
 def post_process(
     bbox: torch.Tensor,
     mask: torch.Tensor,
@@ -32,6 +34,7 @@ def post_process(
     weight_decay: float = 0.0,
     adam_betas: Tuple[float, float] = (0.9, 0.999),
     adam_eps: float = 1e-08,
+    disable_progress_bar: bool = False,
 ) -> PostProcessOutput:
     """LACE's post-processing optimization for bounding boxes.
 
@@ -79,8 +82,14 @@ def post_process(
         eps=adam_eps,
         amsgrad=False,
     )
-    with torch.enable_grad():
-        for i in range(max_iterations):
+
+    with tqdm(
+        total=max_iterations,
+        desc="Perform LACE's post-processing optimization",
+        disable=disable_progress_bar,
+        dynamic_ncols=True,
+    ) as pbar:
+        for _ in range(max_iterations):
             bbox_1 = torch.relu(bbox_p)
             align_score_target = layout_alignment_matrix(bbox_1, mask)
             align_mask = (align_score_target < ali_threshold).clone().detach()
@@ -94,12 +103,14 @@ def post_process(
             aux_loss = w_a * align_loss + w_o * piou
             loss = mse_loss + aux_loss
 
-            logger.info(
-                f"[{i+1:4d}/{max_iterations}] mse: {mse_loss.item():.7f}, "
-                f"ali: {align_loss.item():.7f}, ove: {piou.item():.7f}, "
-                f"total: {loss.item():.7f}"
+            pbar.set_postfix(
+                {
+                    "mse": mse_loss.item(),
+                    "ali": align_loss.item(),
+                    "ove": piou.item(),
+                    "total": loss.item(),
+                }
             )
-
             optimizer.zero_grad()
             loss.backward()
             torch.nn.utils.clip_grad_norm_([bbox_p], 1.0)
@@ -108,8 +119,10 @@ def post_process(
             a, _ = torch.min(bbox_1[:, :, [2, 3]], dim=2)
             mask = mask * (a > 0.01)
 
-        bbox_out = torch.relu(bbox_p)
-        bbox_out[:, :, [0, 2]] *= 4 / 10
-        bbox_out[:, :, [1, 3]] *= 6 / 10
+            pbar.update()
+
+    bbox_out = torch.relu(bbox_p)
+    bbox_out[:, :, [0, 2]] *= 4 / 10
+    bbox_out[:, :, [1, 3]] *= 6 / 10
 
     return PostProcessOutput(bbox=bbox_out, mask=mask, loss=loss)

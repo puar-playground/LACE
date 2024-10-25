@@ -10,6 +10,7 @@ python = "^3.10"
 torch = ">=2.0.0,<2.0.1 || >2.0.1"
 torchvision = ">=0.15.0"
 einops = ">=0.6.0"
+tqdm = ">=4.0.0"
 
 [tool.poetry.group.dev.dependencies]
 ruff = ">=0.1.5"

@@ -1,4 +1,5 @@
 import torch
+from einops import rearrange
 
 from lace.utils import xywh_to_ltrb_split
 
@@ -13,13 +14,16 @@ def layout_alignment_matrix(bbox: torch.Tensor, mask: torch.Tensor) -> torch.Ten
     Returns:
         torch.Tensor: Alignment matrix.
     """
-    bbox = bbox.permute(2, 0, 1)
+
+    bbox = rearrange(bbox, "b n c -> c b n")
     xl, yt, xr, yb = xywh_to_ltrb_split(bbox)
     xc, yc = bbox[0], bbox[1]
-    X = torch.stack([xl, xc, xr, yt, yc, yb], dim=1)
+
+    X = rearrange([xl, xc, xr, yt, yc, yb], "n b c -> b n c")
     X = X.unsqueeze(-1) - X.unsqueeze(-2)
     idx = torch.arange(X.size(2), device=X.device)
     X[:, :, idx, idx] = 1.0
-    X = X.abs().permute(0, 2, 1, 3)
+
+    X = rearrange(X.abs(), "b n c1 c2 -> b c1 n c2")
     X[~mask] = 1.0
     return X
