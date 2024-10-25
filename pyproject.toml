@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "lace"
+version = "0.1.0"
+description = ""
+authors = ["Shunsuke KITADA <shunsuke.kitada.0831@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+torch = ">=2.0.0,<2.0.1 || >2.0.1"
+torchvision = ">=0.15.0"
+einops = ">=0.6.0"
+
+[tool.poetry.group.dev.dependencies]
+ruff = ">=0.1.5"
+mypy = ">=1.0.0"
+pytest = ">=6.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
