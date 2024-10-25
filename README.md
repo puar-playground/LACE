@@ -1,4 +1,12 @@
 # Towards Aligned Layout Generation via Diffusion Model with Aesthetic Constraints
+
+## Installation
+
+```shell
+pip install git+https://github.com/creative-graphic-design/LACE
+```
+
+---
 source code of the layout generation model, [LACE](https://arxiv.org/abs/2402.04754).
 ![image](git_demo.png)
 ## 1. Installation
