@@ -17,7 +17,7 @@ from test import test_all
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--nepoch", default=100000, help="number of training epochs", type=int)
+    parser.add_argument("--nepoch", default=None, help="number of training epochs", type=int)
     parser.add_argument("--start_epoch", default=0, help="start epoch", type=int)
     parser.add_argument("--batch_size", default=256, help="batch_size", type=int)
     parser.add_argument("--lr", default=1e-5, help="learning rate", type=float)
